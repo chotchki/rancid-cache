@@ -2,6 +2,8 @@
 
 A repository to better understand the varnish-cache approach to configuration. 
 
+[![Rust](https://github.com/chotchki/rancid-cache/actions/workflows/rust.yml/badge.svg)](https://github.com/chotchki/rancid-cache/actions/workflows/rust.yml)
+
 # MVP Approach
 
 * Parse a given VCL program (starting with something super simple)
