@@ -1,71 +1,50 @@
-use winnow::ascii::{alphanumeric1, multispace0, multispace1, space1};
-use winnow::combinator::seq;
-use winnow::token::take_until;
-use winnow::{Parser, Result};
+use anyhow::Result;
+use clap::Parser;
+use cli::Cli;
+use rcgen::{CertifiedKey, generate_simple_self_signed};
+use std::{net::SocketAddr, path::Path};
+use tokio::net::TcpListener;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-fn main() {
-    println!("Hello, world!");
-}
+mod cli;
+mod vcl;
 
-#[derive(Debug, PartialEq)]
-pub struct Backend {
-    pub name: String,
-    pub host: String,
-}
+#[tokio::main]
+async fn main() -> Result<()> {
+    let cli = Cli::parse();
 
-pub fn string_literal<'s>(s: &mut &'s str) -> Result<&'s str> {
-    let (_, value, _) = ('"', take_until(0.., '"'), '"').parse_next(s)?;
-    Ok(value)
-}
+    //The concept is on start up, take an argument for the listener port and compile / load a "VCL" backend.
+    //Features don't matter here as much as exploring the runtime loading.
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                format!("{}=trace,tower_http=debug", env!("CARGO_CRATE_NAME")).into()
+            }),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
-pub fn parse_backend(input: &mut &str) -> Result<Backend> {
-    seq!(
-        Backend {
-            _: ("backend", space1),
-            name: alphanumeric1.map(|s: &str| s.to_owned()),
-            _: (multispace1, '{', multispace1),
-            _: (".host = "),
-            host: string_literal.map(|s: &str| s.to_owned()),
-            _: (multispace0, ";", multispace0, "}")
-        }
-    )
-    .parse_next(input)
-}
+    let addr = SocketAddr::from(([0, 0, 0, 0], cli.port));
+    tracing::debug!("listening on {}", addr);
 
-#[cfg(test)]
-mod tests {
-    use winnow::error::{ContextError, ErrMode};
+    let listener = TcpListener::bind(addr).await.unwrap();
 
-    use super::*;
-
-    #[test]
-    fn strings() -> Result<(), ContextError> {
-        let sample = "\"blah\"";
-
-        let (remaining, result) = string_literal.parse_peek(sample)?;
-
-        assert!(remaining.is_empty());
-        assert_eq!("blah", result);
-        Ok(())
-    }
-
-    #[test]
-    fn parse_basic() -> Result<(), ContextError> {
-        let basic_backend = "backend default {
-            .host = \"google.com:443\";
-        }";
-
-        let (remaining, backend) = parse_backend.parse_peek(basic_backend)?;
-
-        assert!(remaining.is_empty());
-        assert_eq!(
-            backend,
-            Backend {
-                name: "default".to_string(),
-                host: "google.com:443".to_string()
-            }
+    //Check for certificate directory
+    let cert_path = Path::new(&cli.certificate_dir);
+    if !cert_path.try_exists()? {
+        tracing::error!(
+            "Certificate directory: {} doesn't exist",
+            cert_path.display()
         );
-
-        Ok(())
     }
+
+    //Load / Generate Certificate
+    let subject_alt_names = vec!["localhost".to_string()];
+    let CertifiedKey { cert, key_pair } = generate_simple_self_signed(subject_alt_names).unwrap();
+
+    //Show the certificate
+    println!("{}", cert.pem());
+    println!("{}", key_pair.serialize_pem());
+
+    Ok(())
 }
