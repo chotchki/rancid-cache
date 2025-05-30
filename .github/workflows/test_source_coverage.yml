@@ -4,9 +4,9 @@ on:
       branches:
         - main
   
-  name: Test with Code Coverage
+name: Test with Code Coverage
   
-  jobs:
+jobs:
     test:
       name: Test
       env:
