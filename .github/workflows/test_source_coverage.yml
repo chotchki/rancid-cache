@@ -47,10 +47,9 @@ jobs:
             check_name: Test Results
             github_token: ${{ secrets.GITHUB_TOKEN }}
             files: results.xml
-        - name: Upload to CodeCov
-          uses: codecov/codecov-action@v1
+        - name: Upload results to Codecov
+          uses: codecov/codecov-action@v5
           with:
-            # required for private repositories:
-            token: ${{ secrets.CODECOV_TOKEN }}
-            files: ./lcov.info
-            fail_ci_if_error: true
+              token: ${{ secrets.CODECOV_TOKEN }}
+              files: ./lcov.info
+              fail_ci_if_error: true
