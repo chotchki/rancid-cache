@@ -57,5 +57,4 @@ async fn main() {
         println!("{}", cert.pem());
         println!("{}", key_pair.serialize_pem());
     */
-    Ok(())
 }
