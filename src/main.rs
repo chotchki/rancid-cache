@@ -13,8 +13,22 @@ mod vcl;
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    //The concept is on start up, take an argument for the listener port and compile / load a "VCL" backend.
-    //Features don't matter here as much as exploring the runtime loading.
+    /*
+        Interface
+            -> Entry Point for the Coordinator to call
+
+        Coordinator
+            -> Loads Plugins from Plugin Dir
+            -> Executes Using Interface
+
+        Plugin Builder
+            -> Produces Plugins into the Plugin Directory
+
+        MVP (Ignore network traffic completely for now):
+            1. Make a skeleton interface.
+            2. Make something that builds against the interface.
+            3. Use the interface to load plugins.
+    */
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
