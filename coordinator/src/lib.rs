@@ -1,9 +1,9 @@
 use anyhow::{anyhow, bail};
 use libloading::Library;
 use rcl::RclDyn;
-use rcl::{Rcl, RclPlugin};
+use rcl::RclPlugin;
 use stabby::libloading::StabbyLibrary;
-use std::{fs, path::Path};
+use std::fs;
 pub mod cli;
 
 pub fn load_and_run(cli: &cli::Cli) -> anyhow::Result<()> {

@@ -19,7 +19,7 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
 
     //Create the plugin as a simple cargo build, copy in the interface too
     //TODO: Harden this more
-    let mut temp_compile_dir = tempdir()?;
+    let temp_compile_dir = tempdir()?;
     println!("temp path is {:?}", temp_compile_dir);
 
     let mut temp_path_cargo = PathBuf::new();

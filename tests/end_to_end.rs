@@ -4,7 +4,6 @@ extern crate coordinator;
 extern crate tempfile;
 
 use anyhow::Result;
-use builder::cli::Cli;
 use coordinator::load_and_run;
 use tempfile::tempdir;
 
@@ -17,7 +16,7 @@ fn end_to_end() -> Result<()> {
         rcl_dir: rcl_dir.path().to_path_buf(),
     };
 
-    let output = builder::build_module(&builder_config)?;
+    builder::build_module(&builder_config)?;
     println!("The build completed.");
 
     let coordinator_config = coordinator::cli::Cli {
