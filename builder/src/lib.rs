@@ -1,7 +1,9 @@
 use anyhow::{Result, bail};
+use std::fs::{self, File, create_dir};
 use std::io::{self, Write};
+use std::path::PathBuf;
 use std::{path::Path, process::Command};
-use tempfile::NamedTempFile;
+use tempfile::{NamedTempFile, tempdir};
 
 pub mod cli;
 
@@ -12,30 +14,84 @@ pub fn build_module(cli: &cli::Cli) -> Result<()> {
         bail!("The output path does not exist {}", output_path.display());
     }
 
-    //Our base approach is to write a super simple rust program out to a temp directory that conforms to the rcl interface
-    //TODO: Clean up this approach, the tempfile isn't secure
-    let mut plugin_src = NamedTempFile::new()?;
+    let path_to_interface = format!("{}/../rcl", env!("CARGO_MANIFEST_DIR"));
+    println!("rcl path is {}", path_to_interface);
+
+    //Create the plugin as a simple cargo build, copy in the interface too
+    //TODO: Harden this more
+    let mut temp_compile_dir = tempdir()?;
+    temp_compile_dir.disable_cleanup(true);
+    println!("temp path is {:?}", temp_compile_dir);
+
+    let mut temp_path_cargo = PathBuf::new();
+    temp_path_cargo.push(&temp_compile_dir);
+    temp_path_cargo.push("Cargo.toml");
+    let mut temp_cargo = File::create(temp_path_cargo)?;
     writeln!(
-        plugin_src,
+        temp_cargo,
         r#"
-        pub fn main() {{
-            println!("Hello World");
-    }}
+        [package]
+        name = "builder_module"
+        version = "0.1.0"
+        edition = "2024"
+
+        [lib]
+        crate-type = ["cdylib"]
+
+        [dependencies]
+        rcl = {{ path = "{}" }}
+        stabby = "72.1.1"
+        "#,
+        path_to_interface
+    )?;
+
+    let mut temp_path_lib = PathBuf::new();
+
+    let mut temp_path_src = PathBuf::new();
+    temp_path_src.push(&temp_compile_dir);
+    temp_path_src.push("src");
+    create_dir(&temp_path_src)?;
+
+    let mut temp_path_lib = PathBuf::new();
+    temp_path_lib.push(temp_path_src);
+    temp_path_lib.push("lib.rs");
+
+    let mut temp_lib = File::create(temp_path_lib)?;
+
+    //TODO: Unify these definitions
+    writeln!(
+        temp_lib,
+        r#"
+        use rcl::Rcl;
+
+        struct RclTest;
+        impl Rcl for RclTest {{
+            extern "C" fn start(&self) {{
+                println!("Works 2");
+            }}
+        }}
     "#
     )?;
-    plugin_src.flush()?;
+    temp_lib.flush()?;
 
-    //Now compile the plugin
+    //Now compile the plugin, we're going to cheat by making cargo do our dirty work
     //TODO: Remove the unwrap
-    let output = Command::new("rustc")
-        .args([
-            plugin_src.path().as_os_str().to_str().unwrap(),
-            "--crate-name",
-            "builder",
-            "-o",
-            format!("{}/{}.rcl", cli.rcl_dir, cli.name).as_str(),
-        ])
+    let output = Command::new("cargo")
+        .args(["build"])
+        .current_dir(&temp_compile_dir)
         .output()?;
+
+    //Now copy the output out
+    let mut temp_path_dynlib = PathBuf::new();
+    temp_path_dynlib.push(&temp_compile_dir);
+    temp_path_dynlib.push("target");
+    temp_path_dynlib.push("debug");
+    temp_path_dynlib.push("libbuilder_module.dylib");
+
+    let mut output_path_file = PathBuf::new();
+    output_path_file.push(output_path);
+    output_path_file.push(format!("{}.rcl", cli.name));
+    fs::copy(temp_path_dynlib, output_path_file)?;
 
     println!("status: {}", output.status);
     io::stdout().write_all(&output.stdout)?;
