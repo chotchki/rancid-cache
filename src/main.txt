@@ -1,15 +1,7 @@
-use rcgen::{CertifiedKey, generate_simple_self_signed};
-use std::{net::SocketAddr, path::Path};
-use tokio::net::TcpListener;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
-mod cli;
-
+/*
 #[tokio::main]
 async fn main() {
     //let cli = Cli::parse();
-
-    /*
         Interface
             -> Entry Point for the Coordinator to call
 
@@ -25,7 +17,7 @@ async fn main() {
             2. Make something that builds against the interface.
             3. Use the interface to load plugins.
     */
-    /*
+/*
         tracing_subscriber::registry()
             .with(
                 tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
@@ -56,5 +48,6 @@ async fn main() {
         //Show the certificate
         println!("{}", cert.pem());
         println!("{}", key_pair.serialize_pem());
-    */
+
 }
+*/

@@ -6,3 +6,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 anyhow = { workspace = true }
+clap = { workspace = true }
+rcl = { path = "../rcl" }
+stabby = { workspace = true }
+libloading = "0.8.8"

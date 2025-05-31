@@ -3,11 +3,11 @@ use std::fs::{self, File, create_dir};
 use std::io::{self, Write};
 use std::path::PathBuf;
 use std::{path::Path, process::Command};
-use tempfile::{NamedTempFile, tempdir};
+use tempfile::tempdir;
 
 pub mod cli;
 
-pub fn build_module(cli: &cli::Cli) -> Result<()> {
+pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
     //Validate plugin output directory
     let output_path = Path::new(&cli.rcl_dir);
     if !output_path.try_exists()? {
@@ -20,7 +20,6 @@ pub fn build_module(cli: &cli::Cli) -> Result<()> {
     //Create the plugin as a simple cargo build, copy in the interface too
     //TODO: Harden this more
     let mut temp_compile_dir = tempdir()?;
-    temp_compile_dir.disable_cleanup(true);
     println!("temp path is {:?}", temp_compile_dir);
 
     let mut temp_path_cargo = PathBuf::new();
@@ -45,8 +44,6 @@ pub fn build_module(cli: &cli::Cli) -> Result<()> {
         path_to_interface
     )?;
 
-    let mut temp_path_lib = PathBuf::new();
-
     let mut temp_path_src = PathBuf::new();
     temp_path_src.push(&temp_compile_dir);
     temp_path_src.push("src");
@@ -62,24 +59,44 @@ pub fn build_module(cli: &cli::Cli) -> Result<()> {
     writeln!(
         temp_lib,
         r#"
-        use rcl::Rcl;
+        use rcl::{{Rcl, RclPlugin}};
+        use stabby::{{boxed::Box, result::Result, string::String}};
 
-        struct RclTest;
+        struct RclTest {{
+            pub inner: String
+        }}
         impl Rcl for RclTest {{
-            extern "C" fn start(&self) {{
-                println!("Works 2");
+            extern "C" fn start(&self) -> Result<String, String> {{
+                Result::Ok("Works 2".into())
             }}
+        }}
+
+        #[stabby::export(canaries)]
+        pub extern "C" fn rcl_plugin_init() -> Result<RclPlugin, String> {{
+            println!("Inside the compiled constructor");
+            let inner = String::new();
+            let rt = RclTest {{ inner }};
+            println!("Obj constructed");
+            let box_rt = Box::new(rt);
+            println!("Box constructed");
+            let into_box_rt = box_rt.into();
+            println!("Box intoed");
+            Result::Ok(into_box_rt)
         }}
     "#
     )?;
     temp_lib.flush()?;
 
     //Now compile the plugin, we're going to cheat by making cargo do our dirty work
-    //TODO: Remove the unwrap
+    //TODO: There is zero caching going on here so its slooooow
     let output = Command::new("cargo")
         .args(["build"])
         .current_dir(&temp_compile_dir)
         .output()?;
+
+    println!("status: {}", output.status);
+    io::stdout().write_all(&output.stdout)?;
+    io::stderr().write_all(&output.stderr)?;
 
     //Now copy the output out
     let mut temp_path_dynlib = PathBuf::new();
@@ -91,13 +108,9 @@ pub fn build_module(cli: &cli::Cli) -> Result<()> {
     let mut output_path_file = PathBuf::new();
     output_path_file.push(output_path);
     output_path_file.push(format!("{}.rcl", cli.name));
-    fs::copy(temp_path_dynlib, output_path_file)?;
+    fs::copy(temp_path_dynlib, &output_path_file)?;
 
-    println!("status: {}", output.status);
-    io::stdout().write_all(&output.stdout)?;
-    io::stderr().write_all(&output.stderr)?;
-
-    Ok(())
+    Ok(output_path_file)
 }
 
 #[cfg(test)]
@@ -114,13 +127,16 @@ mod tests {
 
         let cli = Cli {
             name: "dummy".to_string(),
-            rcl_dir: dir.path().to_string_lossy().to_string(),
+            rcl_dir: dir.path().to_path_buf(),
         };
 
-        build_module(&cli)?;
+        let output = build_module(&cli)?;
+        assert!(output.exists());
 
-        let output_file = format!("{}/dummy.rcl", cli.rcl_dir);
-        assert!(Path::new(&output_file).exists());
+        let mut output_path = cli.rcl_dir.clone();
+        output_path.push("dummy.rcl");
+
+        assert!(output_path.exists());
 
         Ok(())
     }

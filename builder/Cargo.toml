@@ -8,4 +8,4 @@ license = "MIT OR Apache-2.0"
 anyhow = { workspace = true }
 clap = { workspace = true }
 rcl = { path = "../rcl" }
-tempfile = "3.20.0"
+tempfile = { workspace = true }

@@ -131,6 +131,10 @@ name = "coordinator"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "clap",
+ "libloading",
+ "rcl",
+ "stabby",
 ]
 
 [[package]]
@@ -213,6 +217,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d750af042f7ef4f724306de029d18836c26c1765a54a6a3f094cbd23a7267ffa"
 
 [[package]]
+name = "libloading"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07033963ba89ebaf1584d767badaa2e8fcec21aedea6b8c0346d487d49c28667"
+dependencies = [
+ "cfg-if",
+ "windows-targets",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -277,6 +291,16 @@ name = "r-efi"
 version = "5.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74765f6d916ee2faa39bc8e68e4f3ed8949b48cccdac59983d287a7cb71ce9c5"
+
+[[package]]
+name = "rancid-cache"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "builder",
+ "coordinator",
+ "tempfile",
+]
 
 [[package]]
 name = "rand"
@@ -361,6 +385,7 @@ version = "72.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "976399a0c48ea769ef7f5dc303bb88240ab8d84008647a6b2303eced3dab3945"
 dependencies = [
+ "libloading",
  "rustversion",
  "stabby-abi",
 ]
