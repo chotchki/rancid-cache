@@ -1,4 +1,4 @@
-use clap::{Parser, command};
+/*use clap::{Parser, command};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -16,3 +16,4 @@ fn verify_cli() {
     use clap::CommandFactory;
     Cli::command().debug_assert();
 }
+*/
