@@ -1,12 +1,12 @@
 use anyhow::{anyhow, bail};
 use libloading::Library;
-use rcl::RclDyn;
-use rcl::RclPlugin;
+use rcl::{RclPlugin, RclTraitDyn};
 use stabby::libloading::StabbyLibrary;
 use std::fs;
 pub mod cli;
 
 pub fn load_and_run(cli: &cli::Cli) -> anyhow::Result<()> {
+    println!("Inside load and run");
     let mut paths = vec![];
     for entry in fs::read_dir(&cli.rcl_dir)? {
         let dir = entry?;
@@ -18,11 +18,12 @@ pub fn load_and_run(cli: &cli::Cli) -> anyhow::Result<()> {
     //For each entry we're going to execute it... no hardening here, just make it go boom!
     for path in paths {
         //TODO need to document the safety concerns and how we can handle/guard it
+        println!("Trying to use {:?}", path);
         unsafe {
             let lib = Library::new(path)?;
 
             let init_obj = lib
-                .get_canaried::<extern "C" fn() -> stabby::result::Result<RclPlugin, stabby::string::String>>(b"rcl_plugin_init")
+                .get_stabbied::<extern "C" fn() -> stabby::result::Result<RclPlugin, stabby::string::String>>(b"rcl_plugin_init")
                 .map_err(|e| anyhow!("Unable to get the constructor pointer: {}", e))?;
             println!("Got the constructor function");
             //let start_fn = lib

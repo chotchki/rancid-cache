@@ -2,11 +2,11 @@ use stabby::result::Result;
 use stabby::string::String;
 
 #[stabby::stabby(checked)]
-pub trait Rcl {
+pub trait RclTrait {
     extern "C" fn start(&self) -> Result<String, String>;
 }
 
-pub type RclPlugin = stabby::dynptr!(stabby::boxed::Box<dyn Send + Sync + Rcl>);
+pub type RclPlugin = stabby::dynptr!(stabby::boxed::Box<dyn RclTrait>);
 
 #[cfg(test)]
 mod tests {
@@ -16,7 +16,7 @@ mod tests {
     use stabby::string::String;
 
     struct RclTest;
-    impl Rcl for RclTest {
+    impl RclTrait for RclTest {
         extern "C" fn start(&self) -> Result<String, String> {
             Result::Ok("Works".into())
         }

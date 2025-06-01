@@ -59,29 +59,24 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
     writeln!(
         temp_lib,
         r#"
-        use rcl::{{Rcl, RclPlugin}};
+        use rcl::{{RclTrait, RclPlugin}};
         use stabby::{{boxed::Box, result::Result, string::String}};
 
+        #[stabby::stabby]
         struct RclTest {{
-            pub inner: String
+            pub inner: u8
         }}
-        impl Rcl for RclTest {{
-            extern "C" fn start(&self) -> Result<String, String> {{
-                Result::Ok("Works 2".into())
+
+        impl RclTrait for RclTest {{
+            extern "C" fn start(&self) -> Result<stabby::string::String, stabby::string::String> {{
+                stabby::result::Result::Ok("Works 2".into())
             }}
         }}
 
-        #[stabby::export(canaries)]
-        pub extern "C" fn rcl_plugin_init() -> Result<RclPlugin, String> {{
+        #[stabby::export]
+        pub extern "C" fn rcl_plugin_init() -> stabby::result::Result<RclPlugin, stabby::string::String> {{
             println!("Inside the compiled constructor");
-            let inner = String::new();
-            let rt = RclTest {{ inner }};
-            println!("Obj constructed");
-            let box_rt = Box::new(rt);
-            println!("Box constructed");
-            let into_box_rt = box_rt.into();
-            println!("Box intoed");
-            Result::Ok(into_box_rt)
+            stabby::result::Result::Ok(stabby::boxed::Box::new(RclTest {{ inner:0 }}).into())
         }}
     "#
     )?;
