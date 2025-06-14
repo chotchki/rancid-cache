@@ -64,7 +64,8 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
 
         #[stabby::stabby]
         struct RclTest {{
-            pub inner: u8
+            pub inner: u8,
+            inner_str: stabby::string::String,
         }}
 
         impl RclTrait for RclTest {{
@@ -76,7 +77,7 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
         #[stabby::export]
         pub extern "C" fn rcl_plugin_init() -> stabby::result::Result<RclPlugin, stabby::string::String> {{
             println!("Inside the compiled constructor");
-            stabby::result::Result::Ok(stabby::boxed::Box::new(RclTest {{ inner:0 }}).into())
+            stabby::result::Result::Ok(stabby::boxed::Box::new(RclTest {{ inner:0, inner_str: stabby::string::String::new() }}).into())
         }}
     "#
     )?;
