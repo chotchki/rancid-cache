@@ -6,9 +6,16 @@ A repository to better understand the varnish-cache approach to configuration.
 
 # MVP Approach
 
-* Parse a given VCL program (starting with something super simple)
-* * Produce an AST
-* Walk the AST and construct a tokio/hyper proxy
+- [x] Parse a given VCL program (starting with something super simple)
+- - [x] Produce an AST
+- [ ] Walk the AST and construct a tokio/hyper proxy
+- - [ ] Update the RCL interface to support socket handoff
+- - [ ] Take the AST and compile a dumb proxy
+- - [ ] Enable a basic end 2 end test of the proxy
+
+## Implementation Decision
+
+Initial implementation will delegate all proxy actions to the module with the inbound socket being handed off to it.
 
 ## Research Notes
 
