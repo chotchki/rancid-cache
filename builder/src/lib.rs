@@ -38,6 +38,7 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
         crate-type = ["dylib"]
 
         [dependencies]
+        async-trait = "0.1.88"
         rcl = {{ path = "{path_to_interface}" }}
         "#
     )?;
@@ -57,23 +58,31 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
     writeln!(
         temp_lib,
         r#"
-        use rcl::{{RclTrait, RclPlugin}};
+        use async_trait::async_trait;
+        use rcl::{{AsyncStreamInterface, RclTrait, RclPlugin, RclPluginError}};
 
-        struct RclTest {{
-            pub inner: u8,
-            inner_str: String,
-        }}
+        struct RclTest;
 
+        #[async_trait]
         impl RclTrait for RclTest {{
-            fn start(&self) -> Result<String, String> {{
-                Ok("Works 2".into())
+            fn start(&self) {{
+                
             }}
+
+            async fn handle_connection(
+                &self,
+                _stream: Box<dyn AsyncStreamInterface>,
+                ) -> Result<(), RclPluginError> {{
+                println!("Connection handled");
+                Ok(())
+            }}
+
         }}
 
         #[unsafe(no_mangle)]
         pub unsafe fn rcl_plugin_init() -> Result<RclPlugin, String> {{
             println!("Inside the compiled constructor");
-            Ok(Box::new(RclTest {{ inner:0, inner_str: String::new() }}))
+            Ok(Box::new(RclTest {{ }}))
         }}
     "#
     )?;

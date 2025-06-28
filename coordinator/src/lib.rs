@@ -35,12 +35,8 @@ pub fn load_and_run(cli: &cli::Cli) -> anyhow::Result<()> {
             let constructed = res_const.unwrap();
             println!("Constructed the trait object");
 
-            let res_start = constructed.start();
-            if res_start.is_err() {
-                bail!("Unable to start! {}", res_start.err().unwrap());
-            }
-
-            println!("Started with value {}", res_start.unwrap());
+            constructed.start();
+            println!("Started library");
         }
     }
 
