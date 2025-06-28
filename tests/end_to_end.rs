@@ -27,3 +27,29 @@ fn end_to_end() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn end_to_end_multi_module() -> Result<()> {
+    let rcl_dir = tempdir()?;
+
+    let builder_config = builder::cli::Cli {
+        name: "end_to_end".to_string(),
+        rcl_dir: rcl_dir.path().to_path_buf(),
+    };
+    builder::build_module(&builder_config)?;
+
+    let builder_config2 = builder::cli::Cli {
+        name: "end_to_end2".to_string(),
+        rcl_dir: rcl_dir.path().to_path_buf(),
+    };
+    builder::build_module(&builder_config2)?;
+
+    let coordinator_config = coordinator::cli::Cli {
+        rcl_dir: rcl_dir.path().to_path_buf(),
+    };
+
+    load_and_run(&coordinator_config)?;
+    println!("The load and run completed.");
+
+    Ok(())
+}
