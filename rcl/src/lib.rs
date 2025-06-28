@@ -1,7 +1,18 @@
+//! Rancid Cache Module Interface
+//!
+//! This is the crate defining how the coordinator should load and call modules built by rancid cache
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
+/// RCL Plugin Interface
+///
+/// This trait is used to allow a coordinator to know how to load and control configured modules. It is not intended to be directly used.
 pub trait RclTrait {
+    /// Starts up the module for processing, this signature will likely change a LOT
     fn start(&self) -> Result<String, String>;
 }
 
+/// This type is to allow for a construction function for the plugins, its TBD if the construction function needs to be mangled
 pub type RclPlugin = Box<dyn RclTrait>;
 
 #[cfg(test)]
