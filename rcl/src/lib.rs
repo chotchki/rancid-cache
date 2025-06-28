@@ -1,23 +1,16 @@
-use stabby::result::Result;
-use stabby::string::String;
-
-#[stabby::stabby(checked)]
 pub trait RclTrait {
-    extern "C" fn start(&self) -> Result<String, String>;
+    fn start(&self) -> Result<String, String>;
 }
 
-pub type RclPlugin = stabby::dynptr!(stabby::boxed::Box<dyn RclTrait>);
+pub type RclPlugin = Box<dyn RclTrait>;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use stabby::boxed::Box;
-    use stabby::result::Result;
-    use stabby::string::String;
 
     struct RclTest;
     impl RclTrait for RclTest {
-        extern "C" fn start(&self) -> Result<String, String> {
+        fn start(&self) -> Result<String, String> {
             Result::Ok("Works".into())
         }
     }

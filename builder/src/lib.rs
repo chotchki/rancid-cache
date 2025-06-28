@@ -15,12 +15,12 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
     }
 
     let path_to_interface = format!("{}/../rcl", env!("CARGO_MANIFEST_DIR"));
-    println!("rcl path is {}", path_to_interface);
+    println!("rcl path is {path_to_interface:?}",);
 
     //Create the plugin as a simple cargo build, copy in the interface too
     //TODO: Harden this more
     let temp_compile_dir = tempdir()?;
-    println!("temp path is {:?}", temp_compile_dir);
+    println!("temp path is {temp_compile_dir:?}");
 
     let mut temp_path_cargo = PathBuf::new();
     temp_path_cargo.push(&temp_compile_dir);
@@ -35,13 +35,11 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
         edition = "2024"
 
         [lib]
-        crate-type = ["cdylib"]
+        crate-type = ["dylib"]
 
         [dependencies]
-        rcl = {{ path = "{}" }}
-        stabby = "72.1.1"
-        "#,
-        path_to_interface
+        rcl = {{ path = "{path_to_interface}" }}
+        "#
     )?;
 
     let mut temp_path_src = PathBuf::new();
@@ -60,24 +58,22 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
         temp_lib,
         r#"
         use rcl::{{RclTrait, RclPlugin}};
-        use stabby::{{boxed::Box, result::Result, string::String}};
 
-        #[stabby::stabby]
         struct RclTest {{
             pub inner: u8,
-            inner_str: stabby::string::String,
+            inner_str: String,
         }}
 
         impl RclTrait for RclTest {{
-            extern "C" fn start(&self) -> Result<stabby::string::String, stabby::string::String> {{
-                stabby::result::Result::Ok("Works 2".into())
+            fn start(&self) -> Result<String, String> {{
+                Ok("Works 2".into())
             }}
         }}
 
-        #[stabby::export]
-        pub extern "C" fn rcl_plugin_init() -> stabby::result::Result<RclPlugin, stabby::string::String> {{
+        #[unsafe(no_mangle)]
+        pub unsafe fn rcl_plugin_init() -> Result<RclPlugin, String> {{
             println!("Inside the compiled constructor");
-            stabby::result::Result::Ok(stabby::boxed::Box::new(RclTest {{ inner:0, inner_str: stabby::string::String::new() }}).into())
+            Ok(Box::new(RclTest {{ inner:0, inner_str: String::new() }}))
         }}
     "#
     )?;
