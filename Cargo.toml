@@ -12,10 +12,15 @@ anyhow = "1"
 #Hopefully this won't be needed forever
 async-trait = "0.1.88"
 clap = { version = "4.5.39", features = ["derive"] }
+hyper = { version = "1", features = ["full"] }
 tempfile = "3.20.0"
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 tokio-test = "0.4.4"
+
+[dev-dependencies]
+hyper = { workspace = true }
+tokio = { workspace = true }
 
 [dependencies]
 anyhow.workspace = true

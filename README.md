@@ -1,6 +1,6 @@
 # rancid-cache
 
-A repository to better understand the varnish-cache approach to configuration. 
+A repository to better understand the varnish-cache approach to configuration.
 
 [![Rust](https://github.com/chotchki/rancid-cache/actions/workflows/rust.yml/badge.svg)](https://github.com/chotchki/rancid-cache/actions/workflows/rust.yml)
 
@@ -12,6 +12,8 @@ A repository to better understand the varnish-cache approach to configuration.
 - - [ ] Update the RCL interface to support socket handoff
 - - [ ] Take the AST and compile a dumb proxy
 - - [ ] Enable a basic end 2 end test of the proxy
+- [ ] Implement backend shutdown
+- [ ] Test if we're leaking due to the unsafe
 
 ## Implementation Decision
 
