@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail};
 use libloading::Library;
-use rcl::RclPlugin;
+use plugin_interface::Plugin;
 use std::fs;
 pub mod cli;
 
@@ -21,8 +21,8 @@ pub fn load_and_run(cli: &cli::Cli) -> anyhow::Result<()> {
         unsafe {
             let lib = Library::new(path)?;
 
-            let init_obj: libloading::Symbol<unsafe fn() -> Result<RclPlugin, String>> = lib
-                .get(b"rcl_plugin_init")
+            let init_obj: libloading::Symbol<unsafe fn() -> Result<Plugin, String>> = lib
+                .get(b"plugin_init")
                 .map_err(|e| anyhow!("Unable to get the constructor pointer: {}", e))?;
             println!("Got the constructor function");
 

@@ -14,8 +14,8 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
         bail!("The output path does not exist {}", output_path.display());
     }
 
-    let path_to_interface = format!("{}/../rcl", env!("CARGO_MANIFEST_DIR"));
-    println!("rcl path is {path_to_interface:?}",);
+    let path_to_interface = format!("{}/../plugin_interface", env!("CARGO_MANIFEST_DIR"));
+    println!("plugin_interface path is {path_to_interface:?}",);
 
     //Create the plugin as a simple cargo build, copy in the interface too
     //TODO: Harden this more
@@ -39,7 +39,7 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
 
         [dependencies]
         async-trait = "0.1.88"
-        rcl = {{ path = "{path_to_interface}" }}
+        plugin_interface = {{ path = "{path_to_interface}" }}
         "#
     )?;
 
@@ -59,12 +59,12 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
         temp_lib,
         r#"
         use async_trait::async_trait;
-        use rcl::{{AsyncStreamInterface, RclTrait, RclPlugin, RclPluginError}};
+        use plugin_interface::{{AsyncStreamInterface, PluginInterface, Plugin, PluginError}};
 
         struct RclTest;
 
         #[async_trait]
-        impl RclTrait for RclTest {{
+        impl PluginInterface for RclTest {{
             fn start(&self) {{
                 
             }}
@@ -72,7 +72,7 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
             async fn handle_connection(
                 &self,
                 _stream: Box<dyn AsyncStreamInterface>,
-                ) -> Result<(), RclPluginError> {{
+                ) -> Result<(), PluginError> {{
                 println!("Connection handled");
                 Ok(())
             }}
@@ -80,7 +80,7 @@ pub fn build_module(cli: &cli::Cli) -> Result<PathBuf> {
         }}
 
         #[unsafe(no_mangle)]
-        pub unsafe fn rcl_plugin_init() -> Result<RclPlugin, String> {{
+        pub unsafe fn plugin_init() -> Result<Plugin, String> {{
             println!("Inside the compiled constructor");
             Ok(Box::new(RclTest {{ }}))
         }}

@@ -5,7 +5,7 @@ edition = "2024"
 
 [workspace]
 resolver = "3"
-members = ["rcl", "coordinator", "builder"]
+members = ["coordinator", "builder", "plugin_interface"]
 
 [workspace.dependencies]
 anyhow = "1"
